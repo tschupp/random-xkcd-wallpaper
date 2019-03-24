@@ -14,12 +14,14 @@ debug: DEBUG := <string>--debug</string>
 all: clean install
 
 build: 
-	mkdir -p $(DIR_INSTALL) 
+	mkdir -p $(DIR_INSTALL)
+ifeq ($(OS), Darwin)	 
 	sed $(foreach replace, \
 		DIR_INSTALL CONVERT DEBUG LOG, \
 		-e "s|\$${$(replace)}|$($(replace))|g") \
 	plist.template > $(DIR_INSTALL)/Info.plist
-	
+endif	
+
 dependencies:
 ifeq (, $(CONVERT))
 ifeq ($(OS), Darwin)
@@ -31,7 +33,6 @@ endif
 install: dependencies build
 	cp xkcd_wallpaper.sh $(DIR_INSTALL)
 ifeq ($(OS), Darwin)
-# https://alvinalexander.com/mac-os-x/mac-osx-startup-crontab-launchd-jobs
 	launchctl load $(DIR_INSTALL)
 endif
 

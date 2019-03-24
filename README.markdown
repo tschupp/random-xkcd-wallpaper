@@ -4,7 +4,6 @@ Downloads a random xkcd comic, adjusts it with ImageMagick and sets it as your d
 
 How to install
 --------------
-* Get `xkcd_wallpaper.sh` either by cloning the github project or downloading the file. 
-* Install ImageMagick (`ie `)
-* Execute it using launchd (https://alvinalexander.com/mac-os-x/mac-osx-startup-crontab-launchd-jobs)
-Run it. E.g. 0 10,15,20 * * * `<path to script>`/xkcd_wallpaper.sh -v # don't forget the -v. Cront
+* Clone the github project.
+* execute `make` 
+* Uses brew to install ImageMagick 

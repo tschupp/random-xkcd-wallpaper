@@ -22,8 +22,14 @@ https://developer.apple.com/library/archive/documentation/General/Reference/Info
   <key>Nice</key>
   <integer>1</integer>
 
+  <!--key>StartCalendarInterval</key-->
   <key>StartInterval</key>
   <integer>60</integer>
+  
+  <dict>
+    <key>Hour</key>
+    <integer>3</integer>
+  </dict>
 
   <key>RunAtLoad</key>
   <true/>
