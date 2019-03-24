@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #    random xkcd wallpaper: Downloads a random xkcd comic, adjusts it with ImageMagick and sets it as your desktop background.
-#    Copyright (C) 2011  Basil Philipp, basil.philipp@gmail.com
+#    Copyright (C) 2019 thomas@mutualtape.net
 
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -18,28 +18,45 @@
 
 # Creates working directory. Picture will be saved in this directory.
 directory="$HOME/.xkcd_wallpaper"
-if [ ! -d "$directory" ]; then mkdir $directory; fi
-cd $directory
+convert=convert
+silent=FALSE
+debug=FALSE
 
-# oldschool helper
-log() {
-    echo ">> $1" >&2
-}
+out() { echo "[$(date)] >>" $@; }
+log() { if (! $silent); then out $@; fi; }
+debug() { if (! $silent && $debug); then out $@; fi; }
+error() { echo "[$(date)] ERROR:" $@ >&2; exit 1; }
+
+while [ "$1" != "" ]; do
+    case $1 in
+        --dir )                 shift
+                                directory=$1
+                                ;;
+        --convert )             shift
+                                convert=$1
+                                ;;
+        -s | --silent )         silent=TRUE
+                                ;;
+        -d | --debug )          debug=TRUE
+                                ;;
+        * )                     error "wrong arguments"
+    esac
+    shift
+done
+
+if [ ! -d "$directory" ]; then error "no working directory"; fi
+cd $directory
 
 # /random/comic redirects to random comic.
 # Searches the line in the html that points to the url where the actual comic is placed.            # there are sometimes
 # The image urls are of the form: http://imgs.xkcd.com/comics/.'name of comic'.(png | jpg).         # several images,
-getRandomComic() {
-    comic=`curl -sL http://dynamic.xkcd.com/random/comic/` 
-}
+comic_html=`curl -sL http://dynamic.xkcd.com/random/comic`
 
 getImageUrl() { 
-    if [ -z $comic ]; then getRandomComic; fi;                                                                                    # lets get the last one:
-    echo $comic | grep -om1 'imgs.xkcd.com/comics/[^.]*\.[a-z]*' | tail -1 | awk '{print $NF}'
+    echo $comic_html | grep -om1 'imgs.xkcd.com/comics/[^.]*\.[a-z]*' | tail -1 | awk '{print $NF}'
 }
-getMetadata() { 
-    if [ -z $comic ]; then getRandomComic; fi;                                                                                    # lets get the last one:
-    echo $comic | grep -om1 'https://xkcd.com/[0-9]*'  | tail -1 | awk '{print $1}'
+getUrl() { 
+    echo $comic_html | grep -om1 'https://xkcd.com/[0-9]*'  | tail -1 | awk '{print $1}'
 }
 
 getScreenDimension() {
@@ -52,43 +69,42 @@ getY() {
     echo $1 | awk -Fx '{print $2}'
 }
 
-
 url="http://$(getImageUrl)"
 name_pic=$(echo $url | grep -o [^/]*$)
 
-log "Download: $url --> $name_pic"
+debug "Download: $url --> $name_pic"
 curl -so "$name_pic" "$url"
 
-imgDimension=`convert $name_pic -format "%wx%h" info:`
+imgDimension=`${convert} $name_pic -format "%wx%h" info:`
 screenDimension=$(getScreenDimension)
-log "Dimensions: img=$imgDimension screen=$screenDimension"
+debug "Dimensions: img=$imgDimension screen=$screenDimension"
 
 if (( `getX $imgDimension` > `getY $imgDimension` )); then
-    log "Format: landscape"
+    debug "Format: landscape"
     gravity=North
 else
-    log "Format: portrait"
+    debug "Format: portrait"
     gravity=East
 fi
 
 wallpaper_name="xkcd-wallpaper-$name_pic.png";
 # resize 1000x1000 needs to be changed to a decent fraction of the screen dimension
-convert $name_pic -set colorspace Gray -negate -resize 1000x1000 -gravity $gravity -background black -extent $screenDimension $wallpaper_name
-echo "Wallpaper generated --> $wallpaper_name"
+${convert} $name_pic -set colorspace Gray -negate -resize 1200x1200 -gravity $gravity -background black -extent $screenDimension $wallpaper_name
+debug "Wallpaper generated --> $wallpaper_name"
  
 setDesktopMacOs() {
-    # filename needs to be different from the last time the desktop had been set. Otherwise it will not change. Therefore $wallpaper 
+    # filename needs to be different from the last time the desktop had been set. It won't be changed otherwise. 
     osascript -e "tell application \"Finder\" to set desktop picture to POSIX file \"$(pwd)/$wallpaper_name\"" 
 }
 
 # lets the magic happen
 setDesktopMacOs
 
-# track what happens 
-echo "$(date) $(getMetadata) $name_pic" >> $(pwd)/log.txt
+# track what happened
+log $(getUrl) "-->" $name_pic
 
 # cleanup
-find $(pwd) -not -name log.txt -type f | xargs rm
+find $(pwd) -iname "*.png" -or -iname "*.jpg" -type f | xargs rm
 
 
 

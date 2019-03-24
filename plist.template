@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- 
+https://apple.stackexchange.com/questions/159216/run-a-program-script-when-the-screen-is-locked-or-unlocked
+https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/LaunchServicesKeys.html#//apple_ref/doc/uid/TP40009250-SW1
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>net.mutualtape.xkcdwallpaper</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>${DIR_INSTALL}/xkcd_wallpaper.sh</string>
+    <string>--dir</string>
+    <string>${DIR_INSTALL}</string>
+    <string>--convert</string>
+    <string>${CONVERT}</string>
+    ${DEBUG}
+  </array>
+
+  <key>Nice</key>
+  <integer>1</integer>
+
+  <key>StartInterval</key>
+  <integer>60</integer>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>StandardErrorPath</key>
+  <string>${LOG}</string>
+
+  <key>StandardOutPath</key>
+  <string>${LOG}</string>
+</dict>
+</plist>
