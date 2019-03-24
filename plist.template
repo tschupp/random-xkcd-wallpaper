@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!-- 
-https://apple.stackexchange.com/questions/159216/run-a-program-script-when-the-screen-is-locked-or-unlocked
-https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/LaunchServicesKeys.html#//apple_ref/doc/uid/TP40009250-SW1
+      http://www.launchd.info/
 -->
 <plist version="1.0">
 <dict>
@@ -16,22 +15,15 @@ https://developer.apple.com/library/archive/documentation/General/Reference/Info
     <string>${DIR_INSTALL}</string>
     <string>--convert</string>
     <string>${CONVERT}</string>
+    <string>--python</string>
+    <string>${PYTHON}</string>
     ${DEBUG}
   </array>
 
-  <key>Nice</key>
-  <integer>1</integer>
+  <key>ThrottleInterval</key>
+  <integer>30</integer>
 
-  <!--key>StartCalendarInterval</key-->
-  <key>StartInterval</key>
-  <integer>60</integer>
-  
-  <dict>
-    <key>Hour</key>
-    <integer>3</integer>
-  </dict>
-
-  <key>RunAtLoad</key>
+  <key>KeepAlive</key>
   <true/>
 
   <key>StandardErrorPath</key>

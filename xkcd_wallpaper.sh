@@ -19,6 +19,7 @@
 # Creates working directory. Picture will be saved in this directory.
 directory="$HOME/.xkcd_wallpaper"
 convert=convert
+python=python
 silent=FALSE
 debug=FALSE
 
@@ -35,6 +36,9 @@ while [ "$1" != "" ]; do
         --convert )             shift
                                 convert=$1
                                 ;;
+        --python )              shift
+                                python=$1
+                                ;;                        
         -s | --silent )         silent=TRUE
                                 ;;
         -d | --debug )          debug=TRUE
@@ -58,16 +62,32 @@ getImageUrl() {
 getUrl() { 
     echo $comic_html | grep -om1 'https://xkcd.com/[0-9]*'  | tail -1 | awk '{print $1}'
 }
-
 getScreenDimension() {
     system_profiler SPDisplaysDataType | grep -m1 Resolution | sed -e 's/[^0-9]*\([0-9]*\) *x *\([0-9]*\).*/\1x\2/'
 }
-getX() {
-    echo $1 | awk -Fx '{print $1}'
+getX() { echo $1 | awk -Fx '{print $1}'; }
+getY() { echo $1 | awk -Fx '{print $2}'; }
+
+isScreenLocked() {
+    ${python} -c 'import sys,Quartz; d=Quartz.CGSessionCopyCurrentDictionary(); print d' | grep CGSSessionScreenIsLocked | grep 1
 }
-getY() {
-    echo $1 | awk -Fx '{print $2}'
-}
+screenLockFile="$(pwd)/.screenIsLocked" 
+if [[ `isScreenLocked` ]]; then
+    debug "screen locked"
+    if [ ! -f $screenLockFile ]; then
+        debug "write screenlock file"    
+        date > $screenLockFile
+        # continue
+    else exit 0; fi
+else
+    debug "screen not locked"
+    if [   -f $screenLockFile ]; then
+        debug "delete screenlockfile"
+        debug "logged in again at" `date` "last lock at" `cat $screenLockFile`
+        rm $screenLockFile
+    fi
+    exit 0;
+fi
 
 url="http://$(getImageUrl)"
 name_pic=$(echo $url | grep -o [^/]*$)
