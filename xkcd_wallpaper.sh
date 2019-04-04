@@ -71,23 +71,30 @@ getY() { echo $1 | awk -Fx '{print $2}'; }
 isScreenLocked() {
     ${python} -c 'import sys,Quartz; d=Quartz.CGSessionCopyCurrentDictionary(); print d' | grep CGSSessionScreenIsLocked | grep 1
 }
+
 screenLockFile="$(pwd)/.screenIsLocked" 
-if [[ `isScreenLocked` ]]; then
-    debug "screen locked"
-    if [ ! -f $screenLockFile ]; then
-        debug "write screenlock file"    
-        date > $screenLockFile
-        # continue
-    else exit 0; fi
+proceed=FALSE
+if [ ! -f $screenLockFile ]; then
+    debug "first run"    
+    proceed=TRUE
 else
-    debug "screen not locked"
-    if [   -f $screenLockFile ]; then
-        debug "delete screenlockfile"
-        debug "logged in again at" `date` "last lock at" `cat $screenLockFile`
-        rm $screenLockFile
+    if [[ `isScreenLocked` ]]; then
+        debug "screen locked"
+        [ ! -s $screenLockFile ] && proceed=TRUE
+    else
+        if [   -s $screenLockFile ]; then
+            debug "logged in again at" `date` "last lock at" `cat $screenLockFile`
+            echo -n "" > $screenLockFile
+        else
+            debug "screen not locked"    
+        fi
     fi
-    exit 0;
-fi
+fi    
+
+$proceed && { 
+    debug "write screenlock file"    
+    date > $screenLockFile
+ } || exit 0;
 
 url="http://$(getImageUrl)"
 name_pic=$(echo $url | grep -o [^/]*$)
@@ -107,8 +114,9 @@ else
     gravity=East
 fi
 
-wallpaper_name="xkcd-wallpaper-$name_pic.png";
+wallpaper_name="xkcd-wallpaper-$name_pic.png"
 # resize 1000x1000 needs to be changed to a decent fraction of the screen dimension
+# todo: https://xkcd.com/720 --> recipes.png portrait looks shitty 
 ${convert} $name_pic -set colorspace Gray -negate -resize 1200x1200 -gravity $gravity -background black -extent $screenDimension $wallpaper_name
 debug "Wallpaper generated --> $wallpaper_name"
  
