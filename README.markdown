@@ -6,4 +6,4 @@ How to install
 --------------
 * Clone the github project.
 * execute `make` 
-* Uses brew to install ImageMagick 
+* installs ImageMagick and the script 

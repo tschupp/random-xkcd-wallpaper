@@ -28,11 +28,25 @@ install-Darwin: install
 		-e "s|\$${$(replace)}|$($(replace))|g") \
 	plist.template > $(DIR_INSTALL)/Info.plist
 	launchctl load $(DIR_INSTALL)
+install-Linux: install	
+	crontab -l > crontab.bak
+	echo '* * * * * cd $(DIR_INSTALL) && ./xkcd_wallpaper \
+			--dir $(DIR_INSTALL) \
+			--convert $(CONVERT) \
+			$(DEBUG) \
+			> $(LOG) 2>&1' \
+     	>> crontab.bak
+	crontab crontab.bak
+	rm crontab.bak
 
 clean: clean-$(OS)
 	rm -rf $(DIR_INSTALL)
 clean-Darwin: 
 	launchctl unload $(DIR_INSTALL)
+clean-Linux: 
+	crontab -l | grep -v xkcd_wallpaper > crontab.bak
+	crontab crontab.bak
+	rm crontab.bak
 
 dependencies: 
 ifeq (, $(CONVERT))
