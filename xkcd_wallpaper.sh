@@ -52,8 +52,8 @@ if [ ! -d "$directory" ]; then error "no working directory"; fi
 cd $directory
 
 # /random/comic redirects to random comic.
-# Searches the line in the html that points to the url where the actual comic is placed.            # there are sometimes
-# The image urls are of the form: http://imgs.xkcd.com/comics/.'name of comic'.(png | jpg).         # several images,
+# Searches the line in the html that points to the url where the actual comic is placed.
+# The image urls are of the form: http://imgs.xkcd.com/comics/.'name of comic'.(png | jpg).
 comic_html=`curl -sL http://dynamic.xkcd.com/random/comic`
 
 getImageUrl() { 
@@ -62,15 +62,11 @@ getImageUrl() {
 getUrl() { 
     echo $comic_html | grep -om1 'https://xkcd.com/[0-9]*'  | tail -1 | awk '{print $1}'
 }
-getScreenDimension() {
-    system_profiler SPDisplaysDataType | grep -m1 Resolution | sed -e 's/[^0-9]*\([0-9]*\) *x *\([0-9]*\).*/\1x\2/'
-}
 getX() { echo $1 | awk -Fx '{print $1}'; }
 getY() { echo $1 | awk -Fx '{print $2}'; }
 
-isScreenLocked() {
-    ${python} -c 'import sys,Quartz; d=Quartz.CGSessionCopyCurrentDictionary(); print d' | grep CGSSessionScreenIsLocked | grep 1
-}
+# Operating System dependent functions
+source $(pwd)/xkcd_wallpaper-OS.sh
 
 screenLockFile="$(pwd)/.screenIsLocked" 
 proceed=FALSE
@@ -119,14 +115,9 @@ wallpaper_name="xkcd-wallpaper-$name_pic.png"
 # todo: https://xkcd.com/720 --> recipes.png portrait looks shitty 
 ${convert} $name_pic -set colorspace Gray -negate -resize 1200x1200 -gravity $gravity -background black -extent $screenDimension $wallpaper_name
 debug "Wallpaper generated --> $wallpaper_name"
- 
-setDesktopMacOs() {
-    # filename needs to be different from the last time the desktop had been set. It won't be changed otherwise. 
-    osascript -e "tell application \"Finder\" to set desktop picture to POSIX file \"$(pwd)/$wallpaper_name\"" 
-}
 
 # lets the magic happen
-setDesktopMacOs
+setBackground
 
 # track what happened
 log $(getUrl) "-->" $name_pic
